@@ -1,0 +1,42 @@
+node_modules
+dist
+dist-ssr
+build
+.vite
+.cache
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.idea
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS
+.DS_Store
+
+# Test / coverage
+coverage
+.nyc_output
+
+# Supabase
+supabase/.branches
+supabase/.temp
+.supabase

@@ -1,0 +1,61 @@
+{
+  "name": "alfahad-ice-system",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Al-Fahad Ice — offline-first ice factory operations PWA",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "vitest run",
+    "supabase:diff": "supabase db diff -f new_migration",
+    "supabase:reset": "supabase db reset"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "@tanstack/react-query": "^5.59.0",
+    "clsx": "^2.1.1",
+    "dexie": "^4.0.8",
+    "dexie-react-hooks": "^1.1.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "@types/node": "^20.16.10",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "eslint": "^9.12.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.12",
+    "fake-indexeddb": "^6.0.0",
+    "globals": "^15.10.0",
+    "jsdom": "^25.0.1",
+    "supabase": "^1.200.3",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8",
+    "vite-plugin-pwa": "^0.20.5",
+    "vitest": "^2.1.2",
+    "@vitest/coverage-v8": "^2.1.2",
+    "workbox-build": "^7.1.1",
+    "workbox-expiration": "^7.1.0",
+    "workbox-precaching": "^7.1.0",
+    "workbox-routing": "^7.1.0",
+    "workbox-strategies": "^7.1.0",
+    "workbox-window": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
