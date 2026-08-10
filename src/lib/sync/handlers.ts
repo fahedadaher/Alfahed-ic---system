@@ -9,7 +9,7 @@
 
 import { supabase } from '../supabase/client';
 import { db } from '../db/indexeddb';
-import { syncEngine, SyncConflictError } from './sync-engine';
+import { syncEngine, SyncConflictError, isConflictSignal, errorMessage } from './sync-engine';
 import type { Sale, SaleItem, Return, ReturnItem } from '../../types/domain';
 
 interface ProcessSalePayload    { sale: Sale; items: SaleItem[] }
@@ -17,13 +17,15 @@ interface ProcessReturnPayload  { ret: Return; items: ReturnItem[] }
 interface CloseTripPayload      { trip_id: string; closing_cash: number; notes: string | null }
 interface StartTripPayload      { trip_id: string; started_at: string }
 interface ApprovePayload        { approval_id: string; decision: 'approved' | 'rejected'; notes: string | null }
+interface VehicleLoadPayload    {
+  trip_id: string; vehicle_id: string; factory_id: string;
+  lines: { product_id: string; quantity: number }[];
+}
 
 /** Detect server-side conflict signals. */
 function classifyAndThrow(err: unknown, fallback: string): never {
-  const msg = err instanceof Error ? err.message : String(err ?? fallback);
-  if (msg.includes('CONFLICT_') || msg.includes('409') || msg.toLowerCase().includes('conflict')) {
-    throw new SyncConflictError(msg, null);
-  }
+  const msg = errorMessage(err, fallback);
+  if (isConflictSignal(err)) throw new SyncConflictError(msg, null);
   throw err instanceof Error ? err : new Error(msg);
 }
 
@@ -102,7 +104,13 @@ export function registerSyncHandlers() {
   });
 
   // -----------------------------------------------------------------
-  // START TRIP.
+  // START TRIP — driver flips trip from 'loaded' to 'in_progress'.
+  // Offline-safe: the local optimistic update is what the driver sees;
+  // the server is reconciled when online via this idempotent RPC.
+  //
+  // Argument names must match start_trip(p_trip_id, p_started_at) in
+  // 0003_rpc_alignment.sql — PostgREST resolves overloads by argument
+  // name, so an extra key makes the call 404 with PGRST202.
   // -----------------------------------------------------------------
   syncEngine.registerHandler('rpc:start_trip', async (op) => {
     const p = op.payload as StartTripPayload;
@@ -111,6 +119,26 @@ export function registerSyncHandlers() {
       p_started_at: p.started_at,
     });
     if (error) classifyAndThrow(error, 'start_trip failed');
+    return data;
+  });
+
+  // -----------------------------------------------------------------
+  // VEHICLE LOAD — online-only. Idempotent on (trip_id, product_id).
+  // -----------------------------------------------------------------
+  syncEngine.registerHandler('rpc:vehicle_load', async (op) => {
+    const p = op.payload as VehicleLoadPayload;
+    const { data, error } = await supabase.rpc('vehicle_load', {
+      p_trip_id:    p.trip_id,
+      p_vehicle_id: p.vehicle_id,
+      p_factory_id: p.factory_id,
+      p_lines: p.lines.map(l => ({
+        product_id: l.product_id,
+        quantity:   l.quantity,
+      })),
+    });
+    if (error) classifyAndThrow(error, 'vehicle_load failed');
+
+    if (Array.isArray(data)) await db.vehicle_loads.bulkPut(data);
     return data;
   });
 
@@ -125,22 +153,6 @@ export function registerSyncHandlers() {
       p_notes:       p.notes,
     });
     if (error) classifyAndThrow(error, 'decide_cashier_approval failed');
-    return data;
-  });
-
-  // -----------------------------------------------------------------
-  // START TRIP — driver flips trip from 'loaded' to 'in_progress'.
-  // Offline-safe: the local optimistic update is what the driver sees;
-  // the server is reconciled when online via this idempotent RPC.
-  // -----------------------------------------------------------------
-  syncEngine.registerHandler('rpc:start_trip', async (op) => {
-    const p = op.payload as { trip_id: string; started_at: string };
-    const { data, error } = await supabase.rpc('start_trip', {
-      p_op_id: op.id,
-      p_trip_id: p.trip_id,
-      p_started_at: p.started_at,
-    });
-    if (error) unwrapError(error, 'start_trip failed');
     return data;
   });
 

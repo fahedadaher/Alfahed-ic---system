@@ -24,6 +24,13 @@ export interface OutboxOperation<TPayload = unknown> {
   last_error: string | null;
   synced_at: string | null;
   server_response: unknown | null;
+  /**
+   * Earliest time this op may be retried (ISO). `null` means "due now".
+   * Set when a failed op is requeued so backoff is a property of the row
+   * rather than a sleep inside the drain loop — otherwise one failing op
+   * stalls every op behind it.
+   */
+  next_attempt_at: string | null;
 }
 
 export interface SyncMeta {

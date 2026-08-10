@@ -188,6 +188,17 @@ Every offline-allowed mutation:
 9. On 409 (state conflict) → `conflict` → entry written to `conflicts` table for review.
 10. On 5xx / network → exponential backoff: **1s, 2.5s, 5s, 10s, 30s, 60s** (capped at 6 attempts).
 
+Backoff is stored on the row as `next_attempt_at`, not slept on inside the
+drain loop: `pickNext` skips ops that are not yet due and moves on to the
+next one. A single failing op must never hold up the ops behind it — FIFO
+is the ordering, not a barrier. After the last attempt the op becomes
+`failed` and leaves the pending queue entirely (manual retry / discard in
+the sync queue page).
+
+Ops still marked `in_flight` at startup are orphans from a tab that was
+closed mid-request; `syncEngine.start()` requeues them as `pending`.
+Handlers are idempotent on the op id, so replay is safe.
+
 ### Sync triggers
 
 - `online` window event
@@ -238,6 +249,10 @@ db.version(1).stores({
 ```
 
 `client_timestamp` ordering ensures FIFO drain. The op `id` is the idempotency key.
+
+`db.version(2)` adds `next_attempt_at` to outbox rows (retry backoff, see
+§6). It is not indexed — the drain reads pending ops by `status` and gates
+on the due time in memory.
 
 ---
 

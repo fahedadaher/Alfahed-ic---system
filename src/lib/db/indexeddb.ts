@@ -59,6 +59,14 @@ export class AppDatabase extends Dexie {
       conflicts:            'id, operation_id, resolved',
       meta:                 'key',
     });
+
+    // v2 — outbox rows gained `next_attempt_at` (retry backoff moved out
+    // of the drain loop). Backfill existing rows so they are due now.
+    this.version(2).stores({
+      outbox: 'id, status, client_timestamp, entity_type, entity_id',
+    }).upgrade(tx => tx.table('outbox').toCollection().modify(op => {
+      if (op.next_attempt_at === undefined) op.next_attempt_at = null;
+    }));
   }
 }
 
