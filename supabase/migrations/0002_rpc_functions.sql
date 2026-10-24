@@ -247,7 +247,7 @@ as $$
 declare
   v_run production_runs;
 begin
-  if current_role() not in ('factory_manager','owner') then
+  if "current_role"() not in ('factory_manager','owner') then
     raise exception 'FORBIDDEN' using errcode = '42501';
   end if;
 
@@ -289,7 +289,7 @@ as $$
 declare
   v_recon cashier_reconciliations;
 begin
-  if current_role() not in ('cashier','owner') then
+  if "current_role"() not in ('cashier','owner') then
     raise exception 'FORBIDDEN' using errcode = '42501';
   end if;
 

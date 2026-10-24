@@ -376,7 +376,7 @@ create trigger trg_apply_movement
 -- ---------------------------------------------------------------------
 -- RLS helpers
 -- ---------------------------------------------------------------------
-create or replace function current_role() returns user_role
+create or replace function "current_role"() returns user_role
 language sql stable security definer set search_path = public as $$
   select role from profiles where id = auth.uid()
 $$;
@@ -414,7 +414,7 @@ alter table sync_operations          enable row level security;
 
 -- profiles: read self + peers (for staff roles); update self
 create policy profiles_self_read on profiles for select using (
-  id = auth.uid() or current_role() in ('owner','factory_manager','accountant','cashier')
+  id = auth.uid() or "current_role"() in ('owner','factory_manager','accountant','cashier')
 );
 create policy profiles_self_update on profiles for update using (id = auth.uid());
 
@@ -430,42 +430,42 @@ create policy driver_vehicles_read       on driver_vehicles       for select usi
 
 -- trips: drivers see own; staff see all
 create policy trips_read on trips for select using (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager','cashier','accountant')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager','cashier','accountant')
 );
 create policy trips_insert on trips for insert with check (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager')
 );
 create policy trips_update on trips for update using (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager','cashier')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager','cashier')
 );
 
 -- sales: driver writes own; staff read all
 create policy sales_read on sales for select using (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager','cashier','accountant')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager','cashier','accountant')
 );
 create policy sales_insert on sales for insert with check (driver_id = auth.uid());
 create policy sales_update on sales for update using (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager','cashier')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager','cashier')
 );
 
 create policy sale_items_all on sale_items for all using (
   exists (select 1 from sales s where s.id = sale_items.sale_id
           and (s.driver_id = auth.uid()
-               or current_role() in ('owner','factory_manager','cashier','accountant')))
+               or "current_role"() in ('owner','factory_manager','cashier','accountant')))
 );
 
 -- returns
 create policy returns_read on returns for select using (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager','cashier','accountant')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager','cashier','accountant')
 );
 create policy returns_insert on returns for insert with check (driver_id = auth.uid());
 create policy returns_update on returns for update using (
-  driver_id = auth.uid() or current_role() in ('owner','factory_manager','cashier')
+  driver_id = auth.uid() or "current_role"() in ('owner','factory_manager','cashier')
 );
 create policy return_items_all on return_items for all using (
   exists (select 1 from returns r where r.id = return_items.return_id
           and (r.driver_id = auth.uid()
-               or current_role() in ('owner','factory_manager','cashier','accountant')))
+               or "current_role"() in ('owner','factory_manager','cashier','accountant')))
 );
 
 -- inventory: read for everyone; write only via trigger (no direct insert from clients except specific roles for adjustments)
@@ -473,36 +473,36 @@ create policy inv_balances_read       on inventory_balances     for select using
 create policy vehicle_balances_read   on vehicle_balances       for select using (auth.uid() is not null);
 create policy inv_movements_read      on inventory_movements    for select using (auth.uid() is not null);
 create policy inv_movements_insert    on inventory_movements    for insert with check (
-  current_role() in ('owner','factory_manager','driver')
+  "current_role"() in ('owner','factory_manager','driver')
 );
 
 create policy vehicle_loads_read   on vehicle_loads for select using (auth.uid() is not null);
 create policy vehicle_loads_insert on vehicle_loads for insert with check (
-  current_role() in ('owner','factory_manager')
+  "current_role"() in ('owner','factory_manager')
 );
 
 -- approvals: all read; requester inserts; cashier kind updated by cashier/owner; production by manager/owner
 create policy approvals_read   on approvals for select using (auth.uid() is not null);
 create policy approvals_insert on approvals for insert with check (requested_by = auth.uid());
 create policy approvals_update on approvals for update using (
-  (kind = 'cashier'    and current_role() in ('cashier','owner'))
-  or (kind = 'production' and current_role() in ('factory_manager','owner'))
+  (kind = 'cashier'    and "current_role"() in ('cashier','owner'))
+  or (kind = 'production' and "current_role"() in ('factory_manager','owner'))
 );
 
 create policy production_runs_read   on production_runs for select using (auth.uid() is not null);
 create policy production_runs_insert on production_runs for insert with check (
-  current_role() in ('owner','factory_manager')
+  "current_role"() in ('owner','factory_manager')
 );
 
 create policy cashier_recon_read   on cashier_reconciliations for select using (auth.uid() is not null);
 create policy cashier_recon_insert on cashier_reconciliations for insert with check (
-  current_role() in ('cashier','owner')
+  "current_role"() in ('cashier','owner')
 );
 
 -- sync_operations: write-your-own; admins read
 create policy sync_ops_insert on sync_operations for insert with check (user_id = auth.uid());
 create policy sync_ops_read   on sync_operations for select using (
-  user_id = auth.uid() or current_role() in ('owner','factory_manager')
+  user_id = auth.uid() or "current_role"() in ('owner','factory_manager')
 );
 
 -- ---------------------------------------------------------------------

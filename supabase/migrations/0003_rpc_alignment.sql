@@ -29,7 +29,7 @@ begin
     raise exception 'TRIP_NOT_FOUND' using errcode = 'P0002';
   end if;
 
-  if v_trip.driver_id <> auth.uid() and current_role() not in ('owner','factory_manager') then
+  if v_trip.driver_id <> auth.uid() and "current_role"() not in ('owner','factory_manager') then
     raise exception 'FORBIDDEN' using errcode = '42501';
   end if;
 
@@ -68,7 +68,7 @@ declare
   v_app    approvals;
   v_recon  cashier_reconciliations;
 begin
-  if current_role() not in ('cashier','owner') then
+  if "current_role"() not in ('cashier','owner') then
     raise exception 'FORBIDDEN' using errcode = '42501';
   end if;
   if p_decision not in ('approved','rejected') then
@@ -125,7 +125,7 @@ declare
   v_app approvals;
   v_run production_runs;
 begin
-  if current_role() not in ('factory_manager','owner') then
+  if "current_role"() not in ('factory_manager','owner') then
     raise exception 'FORBIDDEN' using errcode = '42501';
   end if;
   if p_decision not in ('approved','rejected') then
