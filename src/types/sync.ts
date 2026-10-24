@@ -53,6 +53,13 @@ export const ONLINE_ONLY_OPERATIONS = new Set<string>([
   'rpc:transfer_vehicle',
   'rpc:adjust_inventory',
   'rpc:vehicle_load',
+  // amp subscriptions & smart meters — server/meter-authoritative
+  'rpc:request_amp_change',
+  'rpc:cancel_amp_command',
+  'rpc:link_meter',
+  'rpc:unlink_meter',
+  'rpc:resolve_meter_alert',
+  'rpc:run_meter_health_check',
 ]);
 
 /** Operations SAFE offline. */

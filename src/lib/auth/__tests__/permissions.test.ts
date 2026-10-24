@@ -31,6 +31,15 @@ describe('permissions matrix', () => {
     expect(can('owner', 'sale.void')).toBe(true);
   });
 
+  it('only owner and factory manager can command meters (mirrors amp_require_manager)', () => {
+    expect(can('owner', 'amp.command')).toBe(true);
+    expect(can('factory_manager', 'amp.command')).toBe(true);
+    expect(can('accountant', 'amp.command')).toBe(false);
+    expect(can('cashier', 'amp.command')).toBe(false);
+    expect(can('driver', 'amp.view')).toBe(false);
+    expect(can('accountant', 'amp.report')).toBe(true);
+  });
+
   it('null role is denied everything', () => {
     expect(can(null, 'sale.view')).toBe(false);
     expect(canAny(null, ['sale.view', 'sale.create'])).toBe(false);

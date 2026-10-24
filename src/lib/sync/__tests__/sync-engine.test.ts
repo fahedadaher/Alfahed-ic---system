@@ -5,7 +5,7 @@
 // =====================================================================
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { syncEngine, OfflineForbiddenError, SyncConflictError } from '../sync-engine';
+import { syncEngine, OfflineForbiddenError, SyncConflictError, SyncRejectedError } from '../sync-engine';
 import { networkMonitor } from '../../network/network-monitor';
 import { db } from '../../db/indexeddb';
 
@@ -75,6 +75,31 @@ describe('syncEngine', () => {
     expect(op?.status).toBe('conflict');
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0]?.reason).toContain('CONFLICT_DEMO');
+  });
+
+  it('fails rejected ops immediately, without retry', async () => {
+    const handler = vi.fn().mockRejectedValue(new SyncRejectedError('22023', 'AMPS_OUT_OF_RANGE:1-20'));
+    syncEngine.registerHandler('rpc:test_rejected', handler);
+
+    const id = await syncEngine.enqueue({
+      operation: 'rpc:test_rejected',
+      entity_type: 'test', entity_id: 'r1', user_id: 'u1', payload: {},
+    });
+    await syncEngine.drain();
+
+    const op = await db.outbox.get(id);
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(op?.status).toBe('failed');
+    expect(op?.last_error).toContain('AMPS_OUT_OF_RANGE');
+    expect(await db.conflicts.count()).toBe(0);
+  });
+
+  it('refuses amp/meter operations while offline', async () => {
+    Object.defineProperty(networkMonitor, 'online', { get: () => false, configurable: true });
+    await expect(syncEngine.enqueue({
+      operation: 'rpc:request_amp_change',
+      entity_type: 'meter_command', entity_id: 'c1', user_id: 'u1', payload: {},
+    })).rejects.toBeInstanceOf(OfflineForbiddenError);
   });
 
   it('is idempotent: same op id is processed only once successfully', async () => {

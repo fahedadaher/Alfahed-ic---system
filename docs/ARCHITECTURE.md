@@ -90,6 +90,10 @@ Conventions:
 - `approvals` — generic (`kind: cashier | production`, `status: pending | approved | rejected`)
 - `cashier_reconciliations` — driver closing-cash vs received-cash with computed `variance`.
 
+### Amp subscriptions & smart meters
+
+- `smart_meters`, `amp_subscriptions`, `meter_readings`, `meter_commands`, `amp_change_log`, `amp_price_policies`, `amp_invoices`, `amp_billing_adjustments`, `meter_alerts`, `meter_settings` — see [`SMART_METERS.md`](SMART_METERS.md). The meter's value is the confirmed truth; `registered_amps` changes only from a meter reading.
+
 ### Sync infrastructure
 
 - `sync_operations` — server-side audit log of every client-issued op (idempotency + replay).

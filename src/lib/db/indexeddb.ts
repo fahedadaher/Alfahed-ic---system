@@ -12,6 +12,7 @@ import type {
   Profile, Product, Customer, PriceListItem, Vehicle,
   Trip, VehicleLoad, VehicleBalance, InventoryBalance,
   Sale, SaleItem, Return, ReturnItem, Approval,
+  SmartMeter, AmpSubscription, MeterCommand, AmpChange, AmpBillingAdjustment, MeterAlert,
 } from '../../types/domain';
 import type { OutboxOperation, SyncMeta, ConflictRecord } from '../../types/sync';
 
@@ -32,6 +33,13 @@ export class AppDatabase extends Dexie {
   returns!:      Table<Return, string>;
   return_items!: Table<ReturnItem, string>;
   approvals!:    Table<Approval, string>;
+
+  smart_meters!:            Table<SmartMeter, string>;
+  amp_subscriptions!:       Table<AmpSubscription, string>;
+  meter_commands!:          Table<MeterCommand, string>;
+  amp_change_log!:          Table<AmpChange, string>;
+  amp_billing_adjustments!: Table<AmpBillingAdjustment, string>;
+  meter_alerts!:            Table<MeterAlert, string>;
 
   outbox!:    Table<OutboxOperation, string>;
   conflicts!: Table<ConflictRecord, string>;
@@ -58,6 +66,15 @@ export class AppDatabase extends Dexie {
       outbox:               'id, status, client_timestamp, entity_type, entity_id',
       conflicts:            'id, operation_id, resolved',
       meta:                 'key',
+    });
+    // v2 — amp subscriptions & smart meters (server snapshots, read-only)
+    this.version(2).stores({
+      smart_meters:            'id, &serial_no, connection_status',
+      amp_subscriptions:       'id, &subscription_no, meter_id, status',
+      meter_commands:          'id, subscription_id, meter_id, status, requested_at',
+      amp_change_log:          'id, subscription_id, changed_at',
+      amp_billing_adjustments: 'id, change_id, subscription_id, status',
+      meter_alerts:            'id, kind, status, subscription_id, meter_id, last_seen_at',
     });
   }
 }

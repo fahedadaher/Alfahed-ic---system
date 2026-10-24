@@ -33,6 +33,11 @@ export default [
     },
   },
   {
+    // Supabase edge functions run on Deno
+    files: ['supabase/functions/**/*.ts'],
+    languageOptions: { globals: { Deno: 'readonly' } },
+  },
+  {
     ignores: ['dist', 'dist-ssr', 'build', 'node_modules', '.vite', 'coverage'],
   },
 ];

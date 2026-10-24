@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
+    "test:sql": "scripts/test-sql.sh",
     "supabase:diff": "supabase db diff -f new_migration",
     "supabase:reset": "supabase db reset"
   },

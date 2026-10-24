@@ -21,6 +21,12 @@ const SIMPLE_TABLES: { name: string; tbl: () => any }[] = [
   { name: 'approvals',    tbl: () => db.approvals },
   { name: 'vehicle_loads',tbl: () => db.vehicle_loads },
   { name: 'profiles',     tbl: () => db.profiles },
+  { name: 'smart_meters',      tbl: () => db.smart_meters },
+  { name: 'amp_subscriptions', tbl: () => db.amp_subscriptions },
+  { name: 'meter_commands',    tbl: () => db.meter_commands },
+  { name: 'amp_change_log',    tbl: () => db.amp_change_log },
+  { name: 'amp_billing_adjustments', tbl: () => db.amp_billing_adjustments },
+  { name: 'meter_alerts',      tbl: () => db.meter_alerts },
 ];
 
 export function startRealtime() {

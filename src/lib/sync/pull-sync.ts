@@ -36,6 +36,13 @@ const SPECS: PullSpec[] = [
   { table: 'returns',            column: 'updated_at', apply: rows => db.returns.bulkPut(rows) },
   { table: 'return_items',       column: 'id',         apply: rows => db.return_items.bulkPut(rows) },
   { table: 'approvals',          column: 'updated_at', apply: rows => db.approvals.bulkPut(rows) },
+  // amp subscriptions & smart meters (staff only — RLS returns nothing to drivers)
+  { table: 'smart_meters',            column: 'updated_at',  apply: async rows => { await db.smart_meters.bulkPut(rows); } },
+  { table: 'amp_subscriptions',       column: 'updated_at',  apply: async rows => { await db.amp_subscriptions.bulkPut(rows); } },
+  { table: 'meter_commands',          column: 'updated_at',  apply: async rows => { await db.meter_commands.bulkPut(rows); } },
+  { table: 'amp_change_log',          column: 'recorded_at', apply: async rows => { await db.amp_change_log.bulkPut(rows); } },
+  { table: 'amp_billing_adjustments', column: 'updated_at',  apply: async rows => { await db.amp_billing_adjustments.bulkPut(rows); } },
+  { table: 'meter_alerts',            column: 'updated_at',  apply: async rows => { await db.meter_alerts.bulkPut(rows); } },
 ];
 
 async function pullOne(spec: PullSpec): Promise<void> {

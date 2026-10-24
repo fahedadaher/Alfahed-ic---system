@@ -24,6 +24,8 @@ export type Permission =
   // Pricing & customers
   | 'price.view'   | 'price.manage'
   | 'customer.view'| 'customer.manage'
+  // Amp subscriptions & smart meters
+  | 'amp.view' | 'amp.manage' | 'amp.command' | 'amp.report'
   // Reports
   | 'report.financial' | 'report.operations'
   // Admin
@@ -41,6 +43,7 @@ const MATRIX: Record<UserRole, ReadonlySet<Permission>> = {
     'approval.view','approval.cashier','approval.production',
     'price.view','price.manage','customer.view','customer.manage',
     'report.financial','report.operations',
+    'amp.view','amp.manage','amp.command','amp.report',
     'admin.users','admin.settings',
   ),
   factory_manager: all(
@@ -51,6 +54,7 @@ const MATRIX: Record<UserRole, ReadonlySet<Permission>> = {
     'approval.view','approval.production',
     'price.view','customer.view',
     'report.operations',
+    'amp.view','amp.manage','amp.command','amp.report',
   ),
   cashier: all(
     'trip.view','trip.review',
@@ -58,6 +62,7 @@ const MATRIX: Record<UserRole, ReadonlySet<Permission>> = {
     'approval.view','approval.cashier',
     'customer.view',
     'report.financial',
+    'amp.view',
   ),
   accountant: all(
     'inventory.view','vehicle.view',
@@ -65,6 +70,7 @@ const MATRIX: Record<UserRole, ReadonlySet<Permission>> = {
     'approval.view',
     'price.view','customer.view',
     'report.financial','report.operations',
+    'amp.view','amp.report',
   ),
   driver: all(
     'vehicle.view',

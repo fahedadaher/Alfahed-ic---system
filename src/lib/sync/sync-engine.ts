@@ -42,6 +42,14 @@ export class SyncConflictError extends Error {
   }
 }
 
+/** The server refused the operation (validation / permission). Retrying cannot help. */
+export class SyncRejectedError extends Error {
+  constructor(public code: string, message: string) {
+    super(message);
+    this.name = 'SyncRejectedError';
+  }
+}
+
 const BACKOFF_MS = [1_000, 2_500, 5_000, 10_000, 30_000, 60_000];
 const MAX_ATTEMPTS = BACKOFF_MS.length;
 const DRAIN_INTERVAL = 5_000;
@@ -50,7 +58,7 @@ class SyncEngine {
   private handlers = new Map<string, SyncHandler>();
   private listeners = new Set<(s: SyncState) => void>();
   private timer: ReturnType<typeof setInterval> | null = null;
-  private draining = false;
+  private draining: Promise<void> | null = null;
   private state: SyncState = { online: true, pending: 0, in_flight: 0, failed: 0 };
 
   registerHandler(operation: string, handler: SyncHandler) {
@@ -134,11 +142,15 @@ class SyncEngine {
     await this.refreshCounts();
   }
 
-  /** Drain pending ops, one at a time. */
-  async drain() {
-    if (this.draining) return;
-    if (!networkMonitor.online) return;
-    this.draining = true;
+  /** Drain pending ops, one at a time. Concurrent callers await the drain already running. */
+  drain(): Promise<void> {
+    if (this.draining) return this.draining;
+    if (!networkMonitor.online) return Promise.resolve();
+    this.draining = this.drainLoop();
+    return this.draining;
+  }
+
+  private async drainLoop() {
     try {
       // Loop until no more pending ops we can process now.
       // (Failed-with-backoff ops are skipped if not yet due.)
@@ -149,7 +161,7 @@ class SyncEngine {
         await this.process(op);
       }
     } finally {
-      this.draining = false;
+      this.draining = null;
       await this.refreshCounts();
     }
   }
@@ -212,6 +224,13 @@ class SyncEngine {
         });
         await db.outbox.update(op.id, {
           status: 'conflict', last_error: message, attempts: op.attempts + 1,
+        });
+        return;
+      }
+
+      if (err instanceof SyncRejectedError) {
+        await db.outbox.update(op.id, {
+          status: 'failed', last_error: message, attempts: op.attempts + 1,
         });
         return;
       }

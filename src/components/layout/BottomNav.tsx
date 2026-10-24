@@ -39,10 +39,15 @@ export function BottomNav() {
     return 0;
   }, [role]) ?? 0;
 
+  const openMeterAlerts = useLiveQuery(async () => {
+    if (role !== 'owner' && role !== 'factory_manager' && role !== 'accountant') return 0;
+    return db.meter_alerts.where('status').equals('open').count();
+  }, [role]) ?? 0;
+
   if (!role) return null;
 
   const syncBadge = sync.pending + sync.failed;
-  const items = buildItems(role, t, syncBadge, pendingApprovals);
+  const items = buildItems(role, t, syncBadge, pendingApprovals, openMeterAlerts);
 
   return (
     <nav className="bottom-nav" aria-label="Primary">
@@ -67,8 +72,10 @@ function buildItems(
   t: (k: string, p?: Record<string, string | number>) => string,
   syncBadge: number,
   approvalBadge: number,
+  meterAlertBadge: number,
 ): NavItem[] {
   const home: NavItem = { to: '/', label: t('nav.home'), icon: '⌂' };
+  const amps: NavItem = { to: '/amps', label: t('nav.amps'), icon: '⚡', badge: meterAlertBadge };
   const sync: NavItem = { to: '/sync', label: t('nav.sync'), icon: '⟳', badge: syncBadge };
 
   switch (role) {
@@ -90,15 +97,17 @@ function buildItems(
         home,
         { to: '/manager/load', label: t('nav.inventory'), icon: '☰' },
         { to: '/', label: t('nav.approvals'), icon: '✓', badge: approvalBadge },
+        amps,
         sync,
       ];
     case 'accountant':
-      return [home, { to: '/', label: t('nav.reports'), icon: '∑' }, sync];
+      return [home, { to: '/', label: t('nav.reports'), icon: '∑' }, amps, sync];
     case 'owner':
       return [
         home,
         { to: '/', label: t('nav.approvals'), icon: '✓', badge: approvalBadge },
         { to: '/', label: t('nav.reports'),   icon: '∑' },
+        amps,
         sync,
       ];
   }

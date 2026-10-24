@@ -59,6 +59,7 @@ docs/             ARCHITECTURE.md (canonical design doc)
 ## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — full system design (read this first).
+- [`docs/SMART_METERS.md`](docs/SMART_METERS.md) — amp subscriptions ⇄ smart meters (sync, commands, billing, health).
 
 ## Scripts
 
@@ -66,4 +67,5 @@ docs/             ARCHITECTURE.md (canonical design doc)
 - `pnpm build` — type-check + production build
 - `pnpm typecheck` — TypeScript only
 - `pnpm test` — Vitest
+- `pnpm test:sql` — apply migrations to a local Postgres and run `supabase/tests/*.test.sql`
 - `pnpm supabase:reset` — reset local DB and re-apply migrations

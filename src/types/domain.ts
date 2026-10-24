@@ -189,3 +189,130 @@ export interface ProductionRun {
   notes: string | null;
   created_at: string;
 }
+
+// ---------------------------------------------------------------------
+// Amp subscriptions ⇄ smart meters (migration 0004). The meter's value
+// is the confirmed truth; `registered_amps` only follows meter readings.
+// ---------------------------------------------------------------------
+
+export type MeterConnectionStatus = 'unknown' | 'online' | 'offline';
+export type AmpSubscriptionStatus = 'active' | 'suspended' | 'closed';
+export type AmpChangeSource       = 'meter_push' | 'meter_poll' | 'reconnect_sync' | 'system_command';
+export type MeterCommandStatus    = 'pending' | 'sent' | 'confirmed' | 'failed' | 'expired' | 'cancelled';
+export type MeterAlertKind =
+  | 'discrepancy' | 'limit_violation' | 'meter_offline'
+  | 'unlinked_subscription' | 'sync_failed' | 'command_failed';
+export type AmpAdjustmentStatus   = 'pending' | 'needs_pricing' | 'applied' | 'void';
+
+export interface SmartMeter {
+  id: string;
+  serial_no: string;
+  model: string | null;
+  driver: string;
+  supports_push: boolean;
+  supports_remote_control: boolean;
+  min_amps: number;
+  max_amps: number;
+  step_amps: number;
+  poll_interval_seconds: number | null;
+  factory_id: string | null;
+  active: boolean;
+  confirmed_amps: number | null;
+  confirmed_at: string | null;
+  last_seen_at: string | null;
+  last_sync_at: string | null;
+  connection_status: MeterConnectionStatus;
+  consecutive_failures: number;
+  last_error: string | null;
+  next_poll_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AmpSubscription {
+  id: string;
+  subscription_no: string;
+  customer_id: string | null;
+  subscriber_name: string;
+  phone: string | null;
+  address: string | null;
+  factory_id: string | null;
+  status: AmpSubscriptionStatus;
+  max_connection_amps: number | null;
+  registered_amps: number;
+  meter_id: string | null;
+  meter_linked_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MeterCommand {
+  id: string;
+  subscription_id: string;
+  meter_id: string;
+  previous_amps: number | null;
+  requested_amps: number;
+  status: MeterCommandStatus;
+  attempts: number;
+  last_error: string | null;
+  note: string | null;
+  requested_by: string;
+  requested_at: string;
+  sent_at: string | null;
+  last_sent_at: string | null;
+  expires_at: string;
+  confirmed_at: string | null;
+  confirmed_reading_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AmpChange {
+  id: string;
+  subscription_id: string;
+  meter_id: string;
+  previous_amps: number;
+  new_amps: number;
+  changed_at: string;
+  recorded_at: string;
+  source: AmpChangeSource;
+  actor_id: string | null;
+  command_id: string | null;
+  reading_id: string;
+}
+
+export interface AmpBillingAdjustment {
+  id: string;
+  change_id: string;
+  subscription_id: string;
+  price_policy_id: string | null;
+  previous_amps: number;
+  new_amps: number;
+  effective_from: string;
+  period_start: string | null;
+  period_end: string | null;
+  days_charged: number | null;
+  days_in_period: number | null;
+  amount: number | null;
+  status: AmpAdjustmentStatus;
+  applied_invoice_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MeterAlert {
+  id: string;
+  kind: MeterAlertKind;
+  status: 'open' | 'resolved';
+  subscription_id: string | null;
+  meter_id: string | null;
+  message: string;
+  details: Record<string, unknown>;
+  occurrences: number;
+  first_seen_at: string;
+  last_seen_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  resolution_note: string | null;
+  updated_at: string;
+}

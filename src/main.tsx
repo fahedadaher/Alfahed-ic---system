@@ -34,6 +34,10 @@ import { LoadVehiclePage } from './pages/manager/LoadVehiclePage';
 import { AccountantHome } from './pages/accountant/AccountantHome';
 import { OwnerHome } from './pages/owner/OwnerHome';
 import { SyncQueuePage } from './pages/SyncQueuePage';
+import { AmpSubscriptionsPage } from './pages/amps/AmpSubscriptionsPage';
+import { AmpSubscriptionDetailPage } from './pages/amps/AmpSubscriptionDetailPage';
+import { MeterHealthPage } from './pages/amps/MeterHealthPage';
+import { RequirePermission } from './lib/auth/role-guard';
 
 import './styles/global.css';
 
@@ -118,6 +122,9 @@ function RoleRouter() {
         <Route path="/trip/close"    element={<CloseTripPage />} />
         <Route path="/manager/load"  element={<LoadVehiclePage />} />
         <Route path="/sync"          element={<SyncQueuePage />} />
+        <Route path="/amps"          element={<RequirePermission perm="amp.view"><AmpSubscriptionsPage /></RequirePermission>} />
+        <Route path="/amps/health"   element={<RequirePermission perm="amp.view"><MeterHealthPage /></RequirePermission>} />
+        <Route path="/amps/:id"      element={<RequirePermission perm="amp.view"><AmpSubscriptionDetailPage /></RequirePermission>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
